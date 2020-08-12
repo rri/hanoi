@@ -54,7 +54,7 @@ fn move_disk_set(
         0 => return,
         n => {
             move_disk_set(n - 1, src, buf, dst, num_moves);
-            move_disk(num_moves);
+            move_disk(num_moves, src, dst);
             move_disk_set(n - 1, buf, dst, src, num_moves);
         }
     }
@@ -63,6 +63,7 @@ fn move_disk_set(
 /// Move a single disk from source to destination.
 ///
 /// * `num_moves` - Number of moves executed so far
-fn move_disk(num_moves: &mut i64) {
+fn move_disk(num_moves: &mut i64, src: &str, dst: &str) {
     *num_moves = *num_moves + 1;
+    println!("{:>10}: {} -> {}", num_moves, src, dst);
 }
