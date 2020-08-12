@@ -4,17 +4,28 @@
 use std::io;
 use std::io::Write;
 
+/// Representation of a 'move' of a disk from one peg to another
+struct Move<'a> {
+    /// Label for the source peg
+    src: &'a str,
+    /// Label for the destination peg
+    dst: &'a str,
+}
+
 /// Solve the Tower of Hanoi problem
 fn main() {
     let mut num_disks = 0;
-    let mut num_moves = 0;
+    let mut lst_moves: Vec<Move> = Vec::new();
 
     get_num_disks(&mut num_disks);
 
     if num_disks >= 0 {
         println!("Number of disks = {}", num_disks);
-        move_disk_set(num_disks, "A", "B", "C", &mut num_moves);
-        println!("Number of moves = {}", &num_moves);
+        move_disk_set(num_disks, "A", "B", "C", &mut lst_moves);
+        println!("Number of moves = {}", lst_moves.len());
+        for (pos, m) in lst_moves.iter().enumerate() {
+            println!("{:>10}: {} -> {}", pos + 1, m.src, m.dst);
+        }
     } else {
         println!("Invalid number ({}) of disks!", &num_disks);
     }
@@ -42,28 +53,65 @@ fn get_num_disks(k: &mut i64) {
 /// * `src`       - Label for the source peg
 /// * `dst`       - Label for the destination peg
 /// * `buf`       - Label for the peg acting as a buffer
-/// * `num_moves` - Number of moves executed so far
-fn move_disk_set(
+/// * `lst_moves` - List of moves executed so far
+fn move_disk_set<'a>(
     num_disks: i64,
-    src: &str,
-    dst: &str,
-    buf: &str,
-    num_moves: &mut i64,
+    src: &'a str,
+    dst: &'a str,
+    buf: &'a str,
+    lst_moves: &mut Vec<Move<'a>>,
 ) {
     match num_disks {
         0 => return,
         n => {
-            move_disk_set(n - 1, src, buf, dst, num_moves);
-            move_disk(num_moves, src, dst);
-            move_disk_set(n - 1, buf, dst, src, num_moves);
+            move_disk_set(n - 1, src, buf, dst, lst_moves);
+            move_disk(lst_moves, src, dst);
+            move_disk_set(n - 1, buf, dst, src, lst_moves);
         }
     }
 }
 
 /// Move a single disk from source to destination.
 ///
-/// * `num_moves` - Number of moves executed so far
-fn move_disk(num_moves: &mut i64, src: &str, dst: &str) {
-    *num_moves = *num_moves + 1;
-    println!("{:>10}: {} -> {}", num_moves, src, dst);
+/// * `lst_moves` - List of moves executed so far
+/// * `src`       - Label for the source peg
+/// * `dst`       - Label for the destination peg
+fn move_disk<'a>(
+    lst_moves: &mut Vec<Move<'a>>,
+    src: &'a str,
+    dst: &'a str,
+) {
+    lst_moves.push(Move { src: src, dst: dst });
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_nil() {
+        test_disks(0, 0);
+    }
+
+    #[test]
+    fn test_one() {
+        test_disks(1, 1);
+    }
+
+    #[test]
+    fn test_two() {
+        test_disks(2, 3);
+    }
+
+    #[test]
+    fn test_ten() {
+        test_disks(10, 1023);
+    }
+
+    fn test_disks(num_disks: i64, exp_num_moves: i64) {
+        let mut lst_moves: Vec<Move> = Vec::new();
+        move_disk_set(num_disks, "A", "B", "C", &mut lst_moves);
+        assert_eq!(lst_moves.len() as i64, exp_num_moves);
+    }
 }
